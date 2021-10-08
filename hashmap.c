@@ -1,7 +1,6 @@
 #include "hashmap.h"
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -91,18 +90,6 @@ static void grow_and_rehash(hashmap_t* map) {
         }
     }
     free(old_buckets);
-}
-
-void show(hashmap_t* map) {
-    printf("len=%d,buckets_len=%d\n", map->len, map->buckets_len);
-    for (int i = 0; i < map->buckets_len; i++) {
-        node_t* node = map->buckets[i].next;
-        while (node != NULL) {
-            printf("[%s:%d] ", node->key, *(int*)node->value);
-            node = node->next;
-        }
-        printf("NULL\n");
-    }
 }
 
 void hashmap_set(hashmap_t* map, const char* key, void* value) {
