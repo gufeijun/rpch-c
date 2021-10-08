@@ -1,0 +1,5 @@
+bin/
+obj/
+core
+makefile
+main.c
