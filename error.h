@@ -16,7 +16,7 @@ static inline struct error error_new() {
     return e;
 }
 
-static void errorf(struct error* err, char* format, ...) {
+void errorf(struct error* err, char* format, ...) {
     if (err == NULL) return;
     va_list marker;
     va_start(marker, format);
@@ -25,7 +25,7 @@ static void errorf(struct error* err, char* format, ...) {
     err->null = false;
 }
 
-static void error_put(struct error* err, char* str) {
+void error_put(struct error* err, char* str) {
     if (err == NULL) return;
     strcpy(err->msg, str);
     err->null = false;
