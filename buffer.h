@@ -10,7 +10,6 @@ typedef struct buffer {
     int len;
     int front;
     int rear;
-    error_t err;
 
 } buffer_t;
 
@@ -18,13 +17,12 @@ buffer_t* buffer_new(conn_t* conn, int buf_size);
 
 void buffer_destroy(buffer_t*);
 
-int buffer_read(buffer_t* buff, char* dst, int size);
+//读取成功返回1，失败返回-1，对端关闭返回0
+int buffer_fill(buffer_t* buff, error_t* err);
 
-int buffer_fill(buffer_t* buff);
+int buffer_copy(buffer_t* buff, char* dst, int size);
 
-int buffer_peek(buffer_t* buff, char* dst, int size);
-
-// int buffer_readline(buffer_t* buff);
+void buffer_drop(buffer_t* buff, int size);
 
 static inline int buffer_buffered(buffer_t* buff) { return buff->len; }
 

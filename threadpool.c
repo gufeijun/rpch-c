@@ -64,7 +64,6 @@ static void* worker(void* arg) {
         pthread_mutex_unlock(&pool->lock);
         pthread_cond_signal(&pool->not_full);
         t.cb(t.arg);
-        free(t.arg);
     }
     pthread_exit(NULL);
     return NULL;

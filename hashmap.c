@@ -165,7 +165,7 @@ void hashmap_del(hashmap_t* map, const char* key) {
     node_t* tmp;
     while (node->next) {
         tmp = node->next;
-        if (map->equal(tmp->key, key)) {
+        if (map->equal(tmp->key, (void*)key)) {
             if (map->del_value) map->del_value(tmp->value);
             map->del_key(tmp->key);
             node->next = tmp->next;

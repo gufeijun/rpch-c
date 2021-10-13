@@ -20,8 +20,7 @@ buffer_t* buffer_new(conn_t* conn, int buf_size) {
     buff->conn = conn;
     buff->buf = malloc(buf_size);
     buff->cap = buf_size;
-    buff->len = buff->len = buff->front = buff->rear = 0;
-    buff->err = error_new();
+    buff->len = buff->front = buff->rear = 0;
     return buff;
 }
 
@@ -31,42 +30,35 @@ void buffer_destroy(buffer_t* buff) {
     free(buff);
 }
 
-int buffer_read(buffer_t* buff, char* dst, int size) {
-    if (!buff->err.null) return -1;
-    if (buffer_buffered(buff) == 0) {
-        return conn_read(buff->conn, dst, size);
-    }
-    if (buffer_buffered(buff) < size) {
-        size = buffer_buffered(buff);
-    }
-    memcpy(dst, buff->buf, size);
-    buff->front += size;
-    buff->len -= size;
-    buffer_adjust(buff);
-    return size;
-}
-
-int buffer_fill(buffer_t* buff) {
-    if (!buff->err.null) return -1;
-    if (buffer_avaliable(buff) == 0) return 0;
+int buffer_fill(buffer_t* buff, error_t* err) {
     int n;
-    n = conn_read(buff->conn, buff->buf + buff->rear, buffer_avaliable(buff));
-    if (n <= 0) goto bad;
+
+    if (buff->rear == buff->cap) buffer_adjust(buff);
+    n = conn_read(buff->conn, buff->buf + buff->rear, buff->cap - buff->rear);
+    if (n < 0) {
+        error_put(err, strerror(errno));
+        return -1;
+    }
+    if (n == 0) {
+        error_put(err, "peer close connetion");
+        return 0;
+    }
     buff->rear += n;
     buff->len += n;
-bad:
-    if (n < 0)
-        error_put(&buff->err, strerror(errno));
-    else if (n == 0)
-        error_put(&buff->err, "peer close the connection");
-    return -1;
+    return 1;
 }
 
-int buffer_peek(buffer_t* buff, char* dst, int size) {
-    if (!buff->err.null) return -1;
+int buffer_copy(buffer_t* buff, char* dst, int size) {
     if (buffer_buffered(buff) < size) {
         size = buffer_buffered(buff);
     }
-    memcpy(dst, buff->buf, size);
+    memcpy(dst, buff->buf + buff->front, size);
     return size;
+}
+
+void buffer_drop(buffer_t* buff, int size) {
+    if (size < 0) return;
+    if (buffer_buffered(buff) < size) size = buff->len;
+    buff->front += size;
+    buff->len -= size;
 }
