@@ -2,22 +2,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "buffer.h"
 #include "error.h"
-
-struct req_arg {
-    uint16_t type_kind;
-    uint16_t type_name_len;
-    uint32_t data_len;
-    char* type_name;
-    char* data;
-};
 
 static void req_arg_init(struct req_arg* arg) {
     arg->type_name_len = 0;
     arg->type_kind = arg->data_len = 0;
     arg->data = arg->type_name = NULL;
+    arg->head_bytes_read = 0;
 }
 
 static inline void req_arg_destroy(struct req_arg* arg) {
@@ -25,7 +19,7 @@ static inline void req_arg_destroy(struct req_arg* arg) {
     free(arg->data);
 }
 
-static int parse_request_line(buffer_t* buf, request_t* req, error_t* err) {
+static int parse_request_line(request_t* req, buffer_t* buf, error_t* err) {
     char *start, *end, *iter;
     int n, i, ret;
     int spaces[3];
@@ -48,7 +42,6 @@ static int parse_request_line(buffer_t* buf, request_t* req, error_t* err) {
         goto bad;
 
     buffer_drop(buf, n + 1);
-    printf("rest: %d\n", buffer_buffered(buf));
     if (*(iter - 1) == '\r') --n;
 
     start[n] = '\0';
@@ -56,16 +49,69 @@ static int parse_request_line(buffer_t* buf, request_t* req, error_t* err) {
     req->method = malloc(spaces[1] - spaces[0] + 1);
     ret = sscanf(start, "%s%s%ld%ld", req->service, req->method, &req->argcnt,
                  &req->seq);
-    if (ret == 4) return 1;
+    if (ret == 4 && req->argcnt < 10) return 1;
 bad:
     error_put(err, ERR_BAD_RQUEST_LINE);
     return -1;
 }
 
+static inline void copy(buffer_t* buff, char** dst, int len) {
+    *dst = malloc(len + 1);
+    memcpy(*dst, buff->buf + buff->front, len);
+    (*dst)[len] = '\0';
+    buffer_drop(buff, len);
+}
+
+static int parse_args(request_t* req, buffer_t* buf, error_t* err) {
+    int i;
+    char* start;
+    struct req_arg *cur_arg, *last_arg;
+
+    if (req->args == NULL) {
+        req->args = malloc(sizeof(struct req_arg) * req->argcnt);
+        for (i = 0; i < req->argcnt; i++) req_arg_init(req->args + i);
+        req->cur_arg = req->args;
+    }
+    last_arg = req->args + (req->argcnt - 1);
+    while (1) {
+        cur_arg = req->cur_arg;
+        start = buf->buf + buf->front;
+        if (!cur_arg->head_bytes_read) {
+            if (buffer_buffered(buf) < 8) return 0;
+            cur_arg->type_kind = *(uint16_t*)start;
+            cur_arg->type_name_len = *(uint16_t*)(start + 2);
+            cur_arg->data_len = *(uint32_t*)(start + 4);
+            cur_arg->head_bytes_read = 1;
+            buffer_drop(buf, 8);
+        }
+        if (buffer_buffered(buf) < cur_arg->data_len + cur_arg->type_name_len)
+            return 0;
+        if (cur_arg->type_name_len != 0)
+            copy(buf, &cur_arg->type_name, cur_arg->type_name_len);
+        if (cur_arg->data_len != 0)
+            copy(buf, &cur_arg->data, cur_arg->data_len);
+        if (cur_arg == last_arg) break;
+        req->cur_arg++;
+    }
+    return 1;
+}
+
 int read_request(request_t* req, buffer_t* buf, error_t* err) {
     int ret;
 
-    ret = parse_request_line(buf, req, err);
+    switch (req->state) {
+        case READING_REQUEST_LINE:
+            ret = parse_request_line(req, buf, err);
+            if (ret == 0 || ret == -1) break;
+            req->state = READING_ARGS;
+        case READING_ARGS:
+            ret = parse_args(req, buf, err);
+            if (ret == 0 || ret == -1) break;
+            req->state = READING_REQUEST_LINE;
+            break;
+        default:
+            ret = -1;
+    }
     return ret;
 }
 
@@ -74,7 +120,9 @@ request_t* request_new() {
 
     req = malloc(sizeof(request_t));
     req->service = req->method = NULL;
-    req->argcnt = req->seq = req->state = 0;
+    req->cur_arg = req->args = NULL;
+    req->argcnt = req->seq = 0;
+    req->state = READING_REQUEST_LINE;
     return req;
 }
 
@@ -92,3 +140,12 @@ void request_destroy(request_t* req) {
     free(req);
 }
 
+void request_set_init_state(struct request* req) {
+    free(req->service);
+    free(req->method);
+    free(req->args);
+    req->state = READING_REQUEST_LINE;
+    req->service = req->method = NULL;
+    req->seq = req->argcnt = 0;
+    req->args = req->cur_arg = NULL;
+}

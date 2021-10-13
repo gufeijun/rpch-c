@@ -91,12 +91,25 @@ static void cfd_callback(void* arg) {
     }
 
     // read request
-    ret = read_request(ctx->req, ctx->buff, &ctx->err);
-    if (!ctx->err.null) goto bad;
-    if (ret == 0) goto not_ready;
-    req = ctx->req;
-    printf("serivce=%s, method=%s, argcnt=%ld, seq=%ld\n", req->service,
-           req->method, req->argcnt, req->seq);
+    while (1) {
+        ret = read_request(ctx->req, ctx->buff, &ctx->err);
+        if (!ctx->err.null) goto bad;
+        if (ret == 0) goto not_ready;
+        req = ctx->req;
+
+        //------------------------------------------------------
+        printf("[%s.%s]arg cnts: %ld, sequence: %ld :\n", req->service,
+               req->method, req->argcnt, req->seq);
+        for (int i = 0; i < req->argcnt; i++) {
+            struct req_arg* arg = req->args + i;
+            printf(
+                "\t\t[arg%d]type_kind=%hd, typename=%s, datalen=%u, data=%s\n ",
+                i, arg->type_kind, arg->type_name, arg->data_len, arg->data);
+        }
+        //------------------------------------------------------
+        request_set_init_state(ctx->req);
+    }
+
 not_ready:
     reset_oneshot(ctx);
     return;
