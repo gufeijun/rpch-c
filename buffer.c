@@ -14,20 +14,59 @@ static inline void buffer_adjust(buffer_t* buff) {
     buff->front = 0;
 }
 
-buffer_t* buffer_new(conn_t* conn, int buf_size) {
+buffer_t* buffer_new(conn_t* conn, int buf_size, int wbuf_size) {
     buffer_t* buff;
     buff = malloc(sizeof(buffer_t));
     buff->conn = conn;
     buff->buf = malloc(buf_size);
     buff->cap = buf_size;
     buff->len = buff->front = buff->rear = 0;
+    buff->wbuf = malloc(wbuf_size);
+    buff->wbuf_cap = wbuf_size;
+    buff->wbuf_len = 0;
     return buff;
 }
 
 void buffer_destroy(buffer_t* buff) {
     conn_destroy(buff->conn);
     free(buff->buf);
+    free(buff->wbuf);
     free(buff);
+}
+
+int buffer_write(buffer_t* buff, char* src, int size, error_t* err) {
+    if (!err->null) return -1;
+    int n;
+
+    if (size + buff->wbuf_len > buff->wbuf_cap) {
+        buffer_flush(buff, err);
+        if (!err->null) return -1;
+        n = conn_write(buff->conn, src, size);
+        if (n <= 0) goto bad;
+        buff->wbuf_len = 0;
+        return size;
+    }
+    memcpy(buff->wbuf + buff->wbuf_len, src, size);
+    buff->wbuf_len += size;
+    return size;
+bad:
+    if (n == 0)
+        error_put(err, "peer close connetion");
+    else
+        error_put(err, strerror(errno));
+    return -1;
+}
+
+void buffer_flush(buffer_t* buff, error_t* err) {
+    int n;
+
+    n = conn_write(buff->conn, buff->wbuf, buff->wbuf_len);
+    if (n == 0)
+        error_put(err, "peer close connetion");
+    else if (n < 0)
+        error_put(err, strerror(errno));
+    else
+        buff->wbuf_len = 0;
 }
 
 int buffer_fill(buffer_t* buff, error_t* err) {
@@ -41,7 +80,7 @@ int buffer_fill(buffer_t* buff, error_t* err) {
     }
     if (n == 0) {
         error_put(err, "peer close connetion");
-        return 0;
+        return -1;
     }
     buff->rear += n;
     buff->len += n;

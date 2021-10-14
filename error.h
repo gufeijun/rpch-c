@@ -10,7 +10,6 @@
 #define ERR_INVALID_KIND "rpch: invalid type kind"
 #define ERR_BAD_RQUEST_LINE "rpch: invalid request line"
 #define ERR_BAD_REQUEST_SERVICE "rpch: request non-existent service"
-#define ERR_BAD_REQUEST_METHOD "rpch: request non-existent method "
 #define ERR_BAD_REQUEST_MESSAGE "rpch: unrecognized request message"
 #define ERR_BAD_REQUEST_TYPE "rpch: unrecognized request builtin type"
 #define ERR_BAD_REQUEST_ARG_CNT \

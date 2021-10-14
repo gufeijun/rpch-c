@@ -147,8 +147,8 @@ void hashmap_set(hashmap_t* map, void* key, void* value) {
     map->len++;
 }
 
-void* hashmap_get(hashmap_t* map, const char* key) {
-    node_t* bucket = hashmap_get_bucket(map, (void*)key);
+void* hashmap_get(hashmap_t* map, void* key) {
+    node_t* bucket = hashmap_get_bucket(map, key);
     struct node* node = bucket->next;
     while (node) {
         if (map->equal((void*)key, node->key)) {
@@ -159,13 +159,13 @@ void* hashmap_get(hashmap_t* map, const char* key) {
     return NULL;
 }
 
-void hashmap_del(hashmap_t* map, const char* key) {
-    node_t* bucket = hashmap_get_bucket(map, (void*)key);
+void hashmap_del(hashmap_t* map, void* key) {
+    node_t* bucket = hashmap_get_bucket(map, key);
     node_t* node = bucket;
     node_t* tmp;
     while (node->next) {
         tmp = node->next;
-        if (map->equal(tmp->key, (void*)key)) {
+        if (map->equal(tmp->key, key)) {
             if (map->del_value) map->del_value(tmp->value);
             map->del_key(tmp->key);
             node->next = tmp->next;
@@ -178,7 +178,7 @@ void hashmap_del(hashmap_t* map, const char* key) {
 
 int hashmap_len(hashmap_t* map) { return map->len; }
 
-int hashmap_has(hashmap_t* map, const char* key) {
+int hashmap_has(hashmap_t* map, void* key) {
     void* value = hashmap_get(map, key);
     return value != NULL;
 }

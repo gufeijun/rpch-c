@@ -11,9 +11,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "argument.h"
 #include "buffer.h"
 #include "error.h"
 #include "evctx.h"
+#include "hashmap.h"
 #include "request.h"
 #include "threadpool.h"
 
@@ -22,6 +24,8 @@
 #define MAX_EVENTS 1024
 #define MAGIC 0x00686A6C
 #define MAGIC_SIZE 4
+
+typedef void (*handler_t)(request_t*, error_t*, struct argument*);
 
 static int init_listenfd(struct server* svr) {
     int lfd, ret, opt;
@@ -67,11 +71,38 @@ static void reset_oneshot(struct evctx* ctx) {
     epoll_ctl(ctx->svr->epoll_fd, EPOLL_CTL_MOD, ctx->fd, &ev);
 }
 
+static void send_response(uint64_t seq, struct argument* arg,
+                          struct evctx* ctx) {
+    buffer_t* buff = ctx->buff;
+    error_t* err = &ctx->err;
+
+    //用户在Handler中设置错误
+    if (!err->null) {
+        arg->type_kind = TYPE_KIND_ERROR;
+        arg->type_name_len = 0;
+        arg->data_len = strlen(ctx->err.msg);
+        arg->data = err->msg;
+        arg->no_free = 1;
+        err->null = true;
+    }
+    buffer_write(buff, (char*)&seq, 8, err);
+    buffer_write(buff, (char*)&arg->type_kind, 2, err);
+    buffer_write(buff, (char*)&arg->type_name_len, 2, err);
+    buffer_write(buff, (char*)&arg->data_len, 4, err);
+    buffer_write(buff, arg->type_name, arg->type_name_len, err);
+    buffer_write(buff, arg->data, arg->data_len, err);
+    if (!err->null) return;
+    buffer_flush(buff, err);
+    return;
+}
+
 static void cfd_callback(void* arg) {
     int ret;
     uint32_t magic;
     struct evctx* ctx;
     struct request* req;
+    handler_t handler;
+    struct argument resp;
 
     // read data into buffer
     ctx = (struct evctx*)arg;
@@ -97,16 +128,18 @@ static void cfd_callback(void* arg) {
         if (ret == 0) goto not_ready;
         req = ctx->req;
 
-        //------------------------------------------------------
-        printf("[%s.%s]arg cnts: %ld, sequence: %ld :\n", req->service,
-               req->method, req->argcnt, req->seq);
-        for (int i = 0; i < req->argcnt; i++) {
-            struct req_arg* arg = req->args + i;
-            printf(
-                "\t\t[arg%d]type_kind=%hd, typename=%s, datalen=%u, data=%s\n ",
-                i, arg->type_kind, arg->type_name, arg->data_len, arg->data);
+        handler =
+            (handler_t)hashmap_get(ctx->svr->services, req->service_method);
+        if (handler == NULL) {
+            error_put(&ctx->err, ERR_BAD_REQUEST_SERVICE);
+            goto bad;
         }
-        //------------------------------------------------------
+        req_arg_init(&resp);
+        handler(req, &ctx->err, &resp);
+        send_response(req->seq, &resp, ctx);
+        req_arg_destroy(&resp);
+        if (!ctx->err.null) goto bad;
+
         request_set_init_state(ctx->req);
     }
 
@@ -134,7 +167,7 @@ static void lfd_callback(void* arg) {
     reset_oneshot(lfd_ctx);
     conn_t* conn = conn_new(cfd, &cli_addr);
 
-    buff = buffer_new(conn, 4096);
+    buff = buffer_new(conn, 4096, 4096);
     ctx = build_evctx(cfd, lfd_ctx->svr, buff, cfd_callback);
     ctx->req = request_new();
     ev.data.ptr = ctx;
@@ -202,6 +235,7 @@ struct server* server_create() {
     svr->lfd = -1;
     svr->epoll_fd = -1;
     svr->port = 0;
+    svr->services = hashmap_init(NULL, Type_String);
     svr->pool = pool_init(DEFAULT_THREAD_CNT);
     return svr;
 }
@@ -214,6 +248,7 @@ void server_destroy(struct server* svr) {
         close(svr->epoll_fd);
     }
     pool_destory(svr->pool);
+    hashmap_destroy(svr->services);
     free(svr);
 }
 

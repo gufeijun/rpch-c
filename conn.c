@@ -28,7 +28,9 @@ struct addr_v4 conn_remote_addr(conn_t* conn) {
 }
 
 int conn_read(conn_t* conn, char* buf, int size) {
-    int n;
-    n = read(conn->cfd, buf, size);
-    return n;
+    return read(conn->cfd, buf, size);
+}
+
+int conn_write(conn_t* conn, char* data, int size) {
+    return write(conn->cfd, data, size);
 }

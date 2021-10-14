@@ -3,17 +3,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "argument.h"
 #include "buffer.h"
 #include "error.h"
-
-struct req_arg {
-    uint16_t type_kind;
-    uint16_t type_name_len;
-    uint32_t data_len;
-    int head_bytes_read;  //头部8B是否读取完
-    char* type_name;
-    char* data;
-};
 
 enum parse_state {
     READING_REQUEST_LINE,
@@ -22,12 +14,11 @@ enum parse_state {
 
 typedef struct request {
     enum parse_state state;
-    char* service;
-    char* method;
+    char* service_method;
     uint64_t argcnt;
     uint64_t seq;
-    struct req_arg* args;
-    struct req_arg* cur_arg;
+    struct argument* args;
+    struct argument* cur_arg;
 } request_t;
 
 request_t* request_new();

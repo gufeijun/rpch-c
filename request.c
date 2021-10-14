@@ -7,18 +7,6 @@
 #include "buffer.h"
 #include "error.h"
 
-static void req_arg_init(struct req_arg* arg) {
-    arg->type_name_len = 0;
-    arg->type_kind = arg->data_len = 0;
-    arg->data = arg->type_name = NULL;
-    arg->head_bytes_read = 0;
-}
-
-static inline void req_arg_destroy(struct req_arg* arg) {
-    free(arg->type_name);
-    free(arg->data);
-}
-
 static int parse_request_line(request_t* req, buffer_t* buf, error_t* err) {
     char *start, *end, *iter;
     int n, i, ret;
@@ -45,10 +33,10 @@ static int parse_request_line(request_t* req, buffer_t* buf, error_t* err) {
     if (*(iter - 1) == '\r') --n;
 
     start[n] = '\0';
-    req->service = malloc(spaces[0] + 1);
-    req->method = malloc(spaces[1] - spaces[0] + 1);
-    ret = sscanf(start, "%s%s%ld%ld", req->service, req->method, &req->argcnt,
-                 &req->seq);
+    req->service_method = malloc(spaces[1] + 1);
+    ret = sscanf(start, "%s%s%ld%ld", req->service_method,
+                 req->service_method + spaces[0] + 1, &req->argcnt, &req->seq);
+    req->service_method[spaces[0]] = '.';
     if (ret == 4 && req->argcnt < 10) return 1;
 bad:
     error_put(err, ERR_BAD_RQUEST_LINE);
@@ -65,10 +53,10 @@ static inline void copy(buffer_t* buff, char** dst, int len) {
 static int parse_args(request_t* req, buffer_t* buf, error_t* err) {
     int i;
     char* start;
-    struct req_arg *cur_arg, *last_arg;
+    struct argument *cur_arg, *last_arg;
 
     if (req->args == NULL) {
-        req->args = malloc(sizeof(struct req_arg) * req->argcnt);
+        req->args = malloc(sizeof(struct argument) * req->argcnt);
         for (i = 0; i < req->argcnt; i++) req_arg_init(req->args + i);
         req->cur_arg = req->args;
     }
@@ -119,7 +107,7 @@ request_t* request_new() {
     request_t* req;
 
     req = malloc(sizeof(request_t));
-    req->service = req->method = NULL;
+    req->service_method = NULL;
     req->cur_arg = req->args = NULL;
     req->argcnt = req->seq = 0;
     req->state = READING_REQUEST_LINE;
@@ -129,8 +117,7 @@ request_t* request_new() {
 void request_destroy(request_t* req) {
     int i;
 
-    free(req->service);
-    free(req->method);
+    free(req->service_method);
     if (req->args != NULL) {
         for (i = 0; i < req->argcnt; i++) {
             req_arg_destroy(req->args + i);
@@ -141,11 +128,10 @@ void request_destroy(request_t* req) {
 }
 
 void request_set_init_state(struct request* req) {
-    free(req->service);
-    free(req->method);
+    free(req->service_method);
     free(req->args);
     req->state = READING_REQUEST_LINE;
-    req->service = req->method = NULL;
+    req->service_method = NULL;
     req->seq = req->argcnt = 0;
     req->args = req->cur_arg = NULL;
 }
