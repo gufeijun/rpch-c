@@ -134,10 +134,10 @@ static void cfd_callback(void* arg) {
             error_put(&ctx->err, ERR_BAD_REQUEST_SERVICE);
             goto bad;
         }
-        req_arg_init(&resp);
+        argument_init(&resp);
         handler(req, &ctx->err, &resp);
         send_response(req->seq, &resp, ctx);
-        req_arg_destroy(&resp);
+        argument_destroy(&resp);
         if (!ctx->err.null) goto bad;
 
         request_set_init_state(ctx->req);

@@ -19,14 +19,14 @@ struct argument {
     char* data;
 };
 
-static inline void req_arg_init(struct argument* arg) {
+static inline void argument_init(struct argument* arg) {
     arg->type_name_len = 0;
     arg->type_kind = arg->data_len = 0;
     arg->data = arg->type_name = NULL;
     arg->head_bytes_read = arg->no_free = 0;
 }
 
-static inline void req_arg_destroy(struct argument* arg) {
+static inline void argument_destroy(struct argument* arg) {
     if (arg->no_free) return;
     free(arg->type_name);
     free(arg->data);

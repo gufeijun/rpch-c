@@ -32,21 +32,24 @@ static uint32_t HASH_STRING(void* value) {
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
     return hash;
 }
-static uint32_t HASH_INT(void* value) {
-    int num = (int)value;
-    return num;
-}
+
+static uint32_t HASH_INT(void* value) { return (int)value; }
+
+static void DEL_KEY_INT(void* key) {}
+
+static void DEL_KEY_STRING(void* key) { free(key); }
+
 static int EQUAL_INT(void* a, void* b) { return (int)a == (int)b; }
+
 static int EQUAL_STRING(void* a, void* b) {
     return strcmp((char*)a, (char*)b) == 0;
 }
+
 static void SETKEY_INT(node_t* n, void* key) { n->key = key; }
+
 static void SETKEY_STRING(node_t* n, void* key) {
-    n->key = malloc(sizeof((char*)key) + 1);
-    strcpy((char*)n->key, (char*)key);
+    n->key = (void*)strdup((char*)key);
 }
-static void DEL_KEY_INT(void* key) {}
-static void DEL_KEY_STRING(void* key) { free(key); }
 
 struct hashmap* hashmap_init(void (*del_value)(void*), enum key_type t) {
     int i;

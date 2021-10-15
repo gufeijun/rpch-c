@@ -57,7 +57,7 @@ static int parse_args(request_t* req, buffer_t* buf, error_t* err) {
 
     if (req->args == NULL) {
         req->args = malloc(sizeof(struct argument) * req->argcnt);
-        for (i = 0; i < req->argcnt; i++) req_arg_init(req->args + i);
+        for (i = 0; i < req->argcnt; i++) argument_init(req->args + i);
         req->cur_arg = req->args;
     }
     last_arg = req->args + (req->argcnt - 1);
@@ -120,7 +120,7 @@ void request_destroy(request_t* req) {
     free(req->service_method);
     if (req->args != NULL) {
         for (i = 0; i < req->argcnt; i++) {
-            req_arg_destroy(req->args + i);
+            argument_destroy(req->args + i);
         }
         free(req->args);
     }
