@@ -26,4 +26,6 @@ static inline void server_register(server_t* svr, char* service_method,
     hashmap_set(svr->services, service_method, (void*)handler);
 }
 
+void build_resp(struct argument* resp, uint16_t type_kind,
+                const char* type_name, uint32_t data_len, char* data);
 #endif

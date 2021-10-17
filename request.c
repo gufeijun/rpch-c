@@ -55,6 +55,7 @@ static int parse_args(request_t* req, buffer_t* buf, error_t* err) {
     char* start;
     struct argument *cur_arg, *last_arg;
 
+    if (req->argcnt == 0) return 1;
     if (req->args == NULL) {
         req->args = malloc(sizeof(struct argument) * req->argcnt);
         for (i = 0; i < req->argcnt; i++) argument_init(req->args + i);

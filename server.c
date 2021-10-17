@@ -280,3 +280,13 @@ void server_listen(struct server* svr, const char* addr, error_t* err) {
         }
     }
 }
+
+void build_resp(struct argument* resp, uint16_t type_kind,
+                const char* type_name, uint32_t data_len, char* data) {
+    resp->type_kind = type_kind;
+    resp->type_name_len = strlen(type_name);
+    resp->data_len = data_len;
+    resp->type_name = strdup(type_name);
+    resp->data = malloc(data_len);
+    memcpy(resp->data, data, data_len);
+}
