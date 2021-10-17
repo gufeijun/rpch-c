@@ -265,7 +265,6 @@ void server_listen(struct server* svr, const char* addr, error_t* err) {
     if (!err->null) return;
     init(svr, err);
     if (!err->null) return;
-    printf("lfd=%d\n", svr->lfd);
     while (1) {
         ready = epoll_wait(svr->epoll_fd, evs, MAX_EVENTS, -1);
         if (ready < 0) {
@@ -275,7 +274,6 @@ void server_listen(struct server* svr, const char* addr, error_t* err) {
         for (i = 0; i < ready; i++) {
             if (!(evs[i].events & EPOLLIN)) continue;
             ctx = (struct evctx*)(evs[i].data.ptr);
-            printf("[events]fd=%d\n", ctx->fd);
             pool_put(svr->pool, ctx->callback, ctx);
         }
     }
