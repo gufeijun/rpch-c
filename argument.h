@@ -13,7 +13,7 @@ struct argument {
     uint16_t type_kind;
     uint16_t type_name_len;
     uint32_t data_len;
-    int head_bytes_read;  //头部8B是否读取完
+    int head_bytes_read;  //请求头部8B是否读取完
     int no_free;          //是否需要free data以及type_name
     char* type_name;
     char* data;

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "addr.h"
+
 struct conn {
     int cfd;
     struct addr_v4 addr;

@@ -11,6 +11,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "addr.h"
 #include "argument.h"
 #include "buffer.h"
 #include "error.h"
@@ -201,33 +202,6 @@ bad:
     error_put(err, strerror(errno));
 }
 
-static void parse_addr(struct server* svr, const char* _addr, error_t* err) {
-    int ret;
-    char addr[64];
-    char* pos;
-    struct in_addr ad;
-
-    strcpy(addr, _addr);
-    pos = strchr(addr, ':');
-    if (!pos || *(pos + 1) == 0) {
-        error_put(err, "[invalid addr]port not specificed");
-        return;
-    }
-    if (pos == addr) {
-        svr->ip = INADDR_ANY;
-        return;
-    }
-    *pos = '\0';
-    ret = inet_pton(AF_INET, addr, &(ad));
-    if (ret != 1) {
-        errorf(err, "invalid addr:%s", addr);
-        return;
-    }
-    svr->ip = ad.s_addr;
-    pos++;
-    sscanf(pos, "%hd", &svr->port);
-}
-
 struct server* server_create() {
     struct server* svr;
 
@@ -256,13 +230,16 @@ void server_listen(struct server* svr, const char* addr, error_t* err) {
     int ready, i;
     struct epoll_event evs[MAX_EVENTS];
     struct evctx* ctx;
+    struct addr_v4 add;
 
     if (!err) {
         error_t e = error_new();
         err = &e;
     }
-    parse_addr(svr, addr, err);
+    parse_addr(&add, addr, err);
     if (!err->null) return;
+    svr->ip = add.ip;
+    svr->port = add.port;
     init(svr, err);
     if (!err->null) return;
     while (1) {

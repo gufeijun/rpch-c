@@ -18,10 +18,10 @@ buffer_t* buffer_new(conn_t* conn, int buf_size, int wbuf_size) {
     buffer_t* buff;
     buff = malloc(sizeof(buffer_t));
     buff->conn = conn;
-    buff->buf = malloc(buf_size);
+    buff->buf = buf_size > 0 ? malloc(buf_size) : NULL;
     buff->cap = buf_size;
     buff->len = buff->front = buff->rear = 0;
-    buff->wbuf = malloc(wbuf_size);
+    buff->wbuf = wbuf_size > 0 ? malloc(wbuf_size) : NULL;
     buff->wbuf_cap = wbuf_size;
     buff->wbuf_len = 0;
     return buff;
