@@ -59,6 +59,7 @@ struct client* client_dial(const char* addr, error_t* err) {
     pthread_mutex_init(&cli->seq_lock, NULL);
     cli->err = error_new();
     cli->buff = buffer_new(conn, 0, BUFSIZE);
+    return cli;
 bad:
     if (conn) conn_destroy(conn);
     if (cli) free(cli);
@@ -144,6 +145,7 @@ uint64_t client_call(client_t* cli, struct client_request* req,
     client_send_request_line(cli, req);
     if (!cli->err.null) goto end;
     for (i = 0; i < req->args_cnt; i++) {
+        // TODO something wrong happens
         client_send_arguments(cli, req->args + i);
         if (!cli->err.null) goto end;
     }
