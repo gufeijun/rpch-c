@@ -2,6 +2,7 @@
 #define __RPCH_CLIENT_H_
 #include <pthread.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "argument.h"
 #include "buffer.h"
@@ -14,6 +15,17 @@ struct client_request {
     struct argument* args;
     int args_cnt;
 };
+
+static inline void client_request_init(struct client_request* req,
+                                       char* service, char* method,
+                                       int arg_cnt) {
+    req->args =
+        arg_cnt ? (struct argument*)malloc(sizeof(struct argument) * arg_cnt)
+                : NULL;
+    req->args_cnt = arg_cnt;
+    req->service = service;
+    req->method = method;
+}
 
 typedef struct client {
     buffer_t* buff;

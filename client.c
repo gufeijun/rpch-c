@@ -119,8 +119,6 @@ bad:
 static uint64_t read_response(client_t* cli, struct argument* resp) {
     uint64_t seq;
 
-    resp->type_name = NULL;
-    resp->data = NULL;
     read_full(cli->buff->conn, cli->resp_hbuf, 16, &cli->err);
     if (!cli->err.null) return 0;
     // 8B(seq) 2B(TypeKind) 2B(type_name_len) 4B(data_len) Typename data
@@ -148,6 +146,7 @@ uint64_t client_call(client_t* cli, struct client_request* req,
     int i;
     uint64_t seq = 0;
 
+    resp->data = resp->type_name = NULL;
     pthread_mutex_lock(&cli->seq_lock);
     client_send_request_line(cli, req);
     if (!cli->err.null) goto end;

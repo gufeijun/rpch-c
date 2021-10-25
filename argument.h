@@ -2,6 +2,7 @@
 #define __RPCH_ARGUMENT_H_
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define TYPE_KIND_NORMAL 0
 #define TYPE_KIND_STREAM 1
@@ -18,6 +19,16 @@ struct argument {
     char* type_name;
     char* data;
 };
+
+static inline void argument_init_with_option(struct argument* arg,
+                                             uint16_t kind, char* type_name,
+                                             void* src, int size) {
+    arg->type_kind = kind;
+    arg->type_name_len = strlen(type_name);
+    arg->type_name = type_name;
+    arg->data_len = size;
+    arg->data = (char*)src;
+}
 
 static inline void argument_init(struct argument* arg) {
     arg->type_name_len = 0;

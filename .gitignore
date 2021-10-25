@@ -2,7 +2,6 @@ bin/
 obj/
 core
 makefile
-main.c
 .ycm_extra_conf.py
 *.swp
 cmd/

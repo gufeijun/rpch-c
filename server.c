@@ -149,7 +149,7 @@ not_ready:
     return;
 bad:
     // TODO error handling
-    printf("err :%s\n", ctx->err.msg);
+    // printf("err :%s\n", ctx->err.msg);
     epoll_ctl(ctx->svr->epoll_fd, EPOLL_CTL_DEL, ctx->fd, NULL);
     evctx_destroy(ctx);
 }
