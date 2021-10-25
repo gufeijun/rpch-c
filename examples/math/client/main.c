@@ -13,22 +13,22 @@ int main() {
     }
     {
         uint32_t res = Math_Add(1, 1, cli);
-        assert(res == 2);
+        assert(!client_failed(cli) && res == 2);
     }
     {
         int32_t res = Math_Sub(2, 3, cli);
-        assert(res == -1);
+        assert(!client_failed(cli) && res == -1);
     }
     {
         struct TwoNum nums;
         nums.A = 3;
         nums.B = 4;
         int32_t res = Math_Multiply(&nums, cli);
-        assert(res == 12);
+        assert(!client_failed(cli) && res == 12);
     }
     {
         struct Quotient* res = Math_Divide(9, 4, cli);
-        assert(res->Quo == 2);
+        assert(!client_failed(cli) && res->Quo == 2);
         assert(res->Rem == 1);
         Quotient_destroy(res);
     }
