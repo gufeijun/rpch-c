@@ -1,5 +1,6 @@
 #include "conn.h"
 
+#include <arpa/inet.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -16,7 +17,8 @@ conn_t* conn_new(int cfd, struct sockaddr_in* addr) {
     conn->cfd = cfd;
     if (addr == NULL) return conn;
     conn->addr.port = addr->sin_port;
-    inet_ntop(AF_INET, &addr->sin_addr.s_addr, conn->addr.ip, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &addr->sin_addr.s_addr, conn->addr.ip_str,
+              INET_ADDRSTRLEN);
     return conn;
 }
 

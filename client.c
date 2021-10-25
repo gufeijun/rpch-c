@@ -16,6 +16,7 @@
 #include "error.h"
 
 #define BUFSIZE 4096
+#define MAGIC 0x00686A6C
 
 static conn_t* client_connect(client_t* cli, const char* addr, error_t* err) {
     int cfd, ret;
@@ -24,7 +25,7 @@ static conn_t* client_connect(client_t* cli, const char* addr, error_t* err) {
     conn_t* conn;
 
     parse_addr(&add, addr, err);
-    if (!cli->err.null) return NULL;
+    if (!err->null) return NULL;
 
     cfd = socket(AF_INET, SOCK_STREAM, 0);
     if (cfd == -1) goto bad;
@@ -40,27 +41,33 @@ static conn_t* client_connect(client_t* cli, const char* addr, error_t* err) {
     conn = conn_new(cfd, &svr_addr);
     return conn;
 bad:
-    if (!err->null) error_put(err, strerror(errno));
+    if (err->null) error_put(err, strerror(errno));
     return NULL;
 }
 
 struct client* client_dial(const char* addr, error_t* err) {
     struct client* cli = NULL;
     conn_t* conn = NULL;
+    uint32_t magic = MAGIC;
+    int n;
 
     if (err == NULL) {
         error_t e = error_new();
         err = &e;
     }
     cli = malloc(sizeof(client_t));
+    cli->err = error_new();
     conn = client_connect(cli, addr, err);
     if (!err->null) goto bad;
+    n = conn_write(conn, (char*)&magic, 4);
+    if (n <= 0) goto bad;
     cli->seq = 0;
     pthread_mutex_init(&cli->seq_lock, NULL);
     cli->err = error_new();
     cli->buff = buffer_new(conn, 0, BUFSIZE);
     return cli;
 bad:
+    if (err->null) error_put(err, strerror(errno));
     if (conn) conn_destroy(conn);
     if (cli) free(cli);
     return NULL;
@@ -106,7 +113,7 @@ static void read_full(conn_t* conn, char* buf, int size, error_t* err) {
     }
     return;
 bad:
-    if (!err->null) error_put(err, strerror(errno));
+    error_put(err, strerror(errno));
 }
 
 static uint64_t read_response(client_t* cli, struct argument* resp) {
@@ -145,7 +152,6 @@ uint64_t client_call(client_t* cli, struct client_request* req,
     client_send_request_line(cli, req);
     if (!cli->err.null) goto end;
     for (i = 0; i < req->args_cnt; i++) {
-        // TODO something wrong happens
         client_send_arguments(cli, req->args + i);
         if (!cli->err.null) goto end;
     }
