@@ -15,14 +15,12 @@ int main() {
         return -1;
     }
     {
-        char* str = "hello";
-        char* res = string_toupper(str, cli);
+        char* res = string_toupper("hello", cli);
         assert(!client_failed(cli) && strcmp(res, "HELLO") == 0);
         free(res);
     }
     {
-        char* str = "HELLO";
-        char* res = string_tolower(str, cli);
+        char* res = string_tolower("HELLO", cli);
         assert(!client_failed(cli) && strcmp(res, "hello") == 0);
         free(res);
     }
