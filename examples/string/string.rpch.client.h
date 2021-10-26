@@ -9,6 +9,7 @@
 #include "client.h"
 
 
+
 char* string_toupper(char*, client_t*);
 char* string_tolower(char*, client_t*);
 char* string_concat(char*, char*, client_t*);

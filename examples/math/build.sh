@@ -6,6 +6,8 @@ if [ $# = 0  ]; then
     if [ ! -d "./obj" ]; then
         mkdir obj
     fi
+
+    rm -rf obj/*
     
     hgen -dir . math.gfj
     

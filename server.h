@@ -17,8 +17,13 @@ typedef struct server {
     hashmap_t* services;
 } server_t;
 
+struct server_attr {
+    int thread_cnt;
+};
+
 struct server* server_create();
-void server_listen(struct server* svr, const char* addr, error_t* err);
+void server_listen(struct server* svr, const char* addr, struct server_attr*,
+                   error_t* err);
 void server_destroy(struct server*);
 static inline void server_register(server_t* svr, char* service_method,
                                    void (*handler)(request_t* req, error_t* err,

@@ -55,7 +55,6 @@ void string_toupper_handler(request_t* req, error_t* err, struct argument* resp)
 	CHECK_ARG_TYPE("string", req->args[0].type_name)
 	
 	arg1 = req->args[0].data;
-	
 	res = string_toupper(arg1, err);
 	if (!err->null) goto end;
 	build_resp(resp, 0, "string", res == NULL? 0 : strlen(res), res);
@@ -72,7 +71,6 @@ void string_tolower_handler(request_t* req, error_t* err, struct argument* resp)
 	CHECK_ARG_TYPE("string", req->args[0].type_name)
 	
 	arg1 = req->args[0].data;
-	
 	res = string_tolower(arg1, err);
 	if (!err->null) goto end;
 	build_resp(resp, 0, "string", res == NULL? 0 : strlen(res), res);
@@ -93,7 +91,6 @@ void string_concat_handler(request_t* req, error_t* err, struct argument* resp) 
 	
 	arg1 = req->args[0].data;
 	arg2 = req->args[1].data;
-	
 	res = string_concat(arg1, arg2, err);
 	if (!err->null) goto end;
 	build_resp(resp, 0, "string", res == NULL? 0 : strlen(res), res);
@@ -110,7 +107,6 @@ void string_atoi_handler(request_t* req, error_t* err, struct argument* resp) {
 	CHECK_ARG_TYPE("string", req->args[0].type_name)
 	
 	arg1 = req->args[0].data;
-	
 	res = string_atoi(arg1, err);
 	if (!err->null) goto end;
 	build_resp(resp, 0, "int32", 4, (char*)&res);

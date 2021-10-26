@@ -50,15 +50,15 @@ char* string_toupper(char* arg1, client_t* client) {
 	int free_data = 1;
     struct client_request req;
     struct argument resp;
-	error_t* err = &client->err;
-	char* v = NULL;
+	error_t* err = &client->err;char* v = NULL;
 
 	client_request_init(&req, "string", "toupper", 1);
+	arg1 = arg1 == NULL ? "" : arg1;
 	argument_init_with_option(req.args + 0, 0, "string", arg1, strlen(arg1));
 	client_call(client, &req, &resp);
     if (!client->err.null) goto end;
 	CHECK_ARG_TYPE("string", resp.type_name)
-v = resp.data;
+	v = resp.data;
 	free_data = 0;
 end:
     if (resp.data && free_data) free(resp.data);
@@ -70,15 +70,15 @@ char* string_tolower(char* arg1, client_t* client) {
 	int free_data = 1;
     struct client_request req;
     struct argument resp;
-	error_t* err = &client->err;
-	char* v = NULL;
+	error_t* err = &client->err;char* v = NULL;
 
 	client_request_init(&req, "string", "tolower", 1);
+	arg1 = arg1 == NULL ? "" : arg1;
 	argument_init_with_option(req.args + 0, 0, "string", arg1, strlen(arg1));
 	client_call(client, &req, &resp);
     if (!client->err.null) goto end;
 	CHECK_ARG_TYPE("string", resp.type_name)
-v = resp.data;
+	v = resp.data;
 	free_data = 0;
 end:
     if (resp.data && free_data) free(resp.data);
@@ -90,16 +90,17 @@ char* string_concat(char* arg1, char* arg2, client_t* client) {
 	int free_data = 1;
     struct client_request req;
     struct argument resp;
-	error_t* err = &client->err;
-	char* v = NULL;
+	error_t* err = &client->err;char* v = NULL;
 
 	client_request_init(&req, "string", "concat", 2);
+	arg1 = arg1 == NULL ? "" : arg1;
 	argument_init_with_option(req.args + 0, 0, "string", arg1, strlen(arg1));
+	arg2 = arg2 == NULL ? "" : arg2;
 	argument_init_with_option(req.args + 1, 0, "string", arg2, strlen(arg2));
 	client_call(client, &req, &resp);
     if (!client->err.null) goto end;
 	CHECK_ARG_TYPE("string", resp.type_name)
-v = resp.data;
+	v = resp.data;
 	free_data = 0;
 end:
     if (resp.data && free_data) free(resp.data);
@@ -111,10 +112,10 @@ int32_t string_atoi(char* arg1, client_t* client) {
 	int free_data = 1;
     struct client_request req;
     struct argument resp;
-	error_t* err = &client->err;
-	int32_t v = 0;
+	error_t* err = &client->err;int32_t v = 0;
 
 	client_request_init(&req, "string", "atoi", 1);
+	arg1 = arg1 == NULL ? "" : arg1;
 	argument_init_with_option(req.args + 0, 0, "string", arg1, strlen(arg1));
 	client_call(client, &req, &resp);
     if (!client->err.null) goto end;

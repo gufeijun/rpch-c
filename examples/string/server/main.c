@@ -42,7 +42,9 @@ int main() {
     error_t err = error_new();
     server_t* svr = server_create();
     register_string_service(svr);
-    server_listen(svr, "127.0.0.1:8080", &err);
+    struct server_attr attr;
+    attr.thread_cnt = 5;
+    server_listen(svr, "127.0.0.1:8080", &attr, &err);
     if (!err.null) {
         printf("err occurred: %s\n", err.msg);
         return -1;

@@ -10,6 +10,7 @@
 #include "server.h"
 
 
+
 // server should implement following functions for service: string
 //**********************************************************
 char* string_toupper(char*, error_t*);

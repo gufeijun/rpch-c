@@ -190,9 +190,10 @@ static int init_epollfd(struct server* svr) {
     return ret;
 }
 
-static void init(struct server* svr, error_t* err) {
+static void init(struct server* svr, struct server_attr* attr, error_t* err) {
     int ret;
 
+    svr->pool = pool_init(attr->thread_cnt);
     ret = init_listenfd(svr);
     if (ret != 0) goto bad;
     ret = init_epollfd(svr);
@@ -210,7 +211,6 @@ struct server* server_create() {
     svr->epoll_fd = -1;
     svr->port = 0;
     svr->services = hashmap_init(NULL, Type_String);
-    svr->pool = pool_init(DEFAULT_THREAD_CNT);
     return svr;
 }
 
@@ -226,11 +226,17 @@ void server_destroy(struct server* svr) {
     free(svr);
 }
 
-void server_listen(struct server* svr, const char* addr, error_t* err) {
+static inline void init_default_attr(struct server_attr* attr) {
+    attr->thread_cnt = DEFAULT_THREAD_CNT;
+}
+
+void server_listen(struct server* svr, const char* addr,
+                   struct server_attr* attr, error_t* err) {
     int ready, i;
     struct epoll_event evs[MAX_EVENTS];
     struct evctx* ctx;
     struct addr_v4 add;
+    struct server_attr _attr;
 
     if (!err) {
         error_t e = error_new();
@@ -240,7 +246,11 @@ void server_listen(struct server* svr, const char* addr, error_t* err) {
     if (!err->null) return;
     svr->ip = add.ip;
     svr->port = add.port;
-    init(svr, err);
+    if (attr == NULL) {
+        init_default_attr(&_attr);
+        attr = &_attr;
+    }
+    init(svr, attr, err);
     if (!err->null) return;
     while (1) {
         ready = epoll_wait(svr->epoll_fd, evs, MAX_EVENTS, -1);
