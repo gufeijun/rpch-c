@@ -56,5 +56,12 @@ int main() {
     check_err(cli);
     assert(strcmp(book->name, "线性代数") == 0 && book->price->num == 2500 &&
            strcmp(book->price->unit, "cent") == 0);
+    {
+        account.balance = 80;
+        struct Account* res = bookMarket_consume(book, &account, cli);
+        check_err(cli);
+        assert(res->balance == 55 && strcmp(res->userName, "jack") == 0);
+        Account_delete(res);
+    }
     printf("test succ!\n");
 }

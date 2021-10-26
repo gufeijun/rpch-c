@@ -10,6 +10,8 @@ int32_t Math_Multiply(struct TwoNum* num, error_t* err) {
 }
 
 struct Quotient* Math_Divide(uint64_t a, uint64_t b, error_t* err) {
+    //返回值为指针，利用自动生成的Quotient_create分配堆区内存
+    //框架内部会对其进行free操作，无需担心内存泄露
     struct Quotient* resp = Quotient_create();
     resp->Rem = a % b;
     resp->Quo = a / b;

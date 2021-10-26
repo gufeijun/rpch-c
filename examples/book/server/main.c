@@ -19,6 +19,8 @@ struct Account* bookMarket_consume(struct Book* book, struct Account* account,
         price = book->price->num / 100;
     }
     account->balance -= price;
+    // account会在该函数结束后被销毁，不能直接返回account
+    //应该在堆区分配内存，对account进行深拷贝
     struct Account* acc = Account_create();
     acc->balance = account->balance;
     acc->userName = strdup(account->userName);
@@ -39,7 +41,9 @@ void bookMarket_updateBookPrice(char* bookName, struct Price* price,
     if (book == NULL) {
         return;
     }
+    //对price深拷贝
     book->price->num = price->num;
+    free(book->price->unit);
     book->price->unit = strdup(price->unit);
     book->name = bookName;
 }
@@ -50,7 +54,12 @@ struct Book* bookMarket_getBook(char* bookName, error_t* err) {
         errorf(err, "do not exsit book %s\n", bookName);
         return NULL;
     }
-    return book;
+    //深拷贝book
+    struct Book* ret = Book_create();
+    ret->name = strdup(book->name);
+    ret->price->num = book->price->num;
+    ret->price->unit = strdup(book->price->unit);
+    return ret;
 }
 
 void book_destroy(void* arg) {

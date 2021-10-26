@@ -27,6 +27,7 @@ int main() {
         assert(!client_failed(cli) && res == 12);
     }
     {
+        //返回值为指针，使用完后我们有义务释放内存，如下Quotient_delete(res);
         struct Quotient* res = Math_Divide(9, 4, cli);
         assert(!client_failed(cli) && res->Quo == 2);
         assert(res->Rem == 1);

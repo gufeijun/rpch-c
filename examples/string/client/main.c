@@ -17,6 +17,7 @@ int main() {
     {
         char* res = string_toupper("hello", cli);
         assert(!client_failed(cli) && strcmp(res, "HELLO") == 0);
+        //返回值为char*，有义务free掉该堆区内存
         free(res);
     }
     {

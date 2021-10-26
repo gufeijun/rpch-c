@@ -10,7 +10,9 @@ char* string_toupper(char* str, error_t* err) {
     for (unsigned long i = 0; i < len; i++) {
         str[i] = toupper(str[i]);
     }
-    //必须返回新开辟的堆区数据
+    //传入参数的str会在此函数结束后被释放掉
+    //所以直接返回str是错误的，需要对str进行深拷贝
+    //返回值必须是分配在堆区的字符串
     return strdup(str);
 }
 
