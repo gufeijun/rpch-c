@@ -22,6 +22,8 @@ struct TwoNum{
 	int32_t B;
 };
 
+struct Quotient* Quotient_create();
+
 // server should implement following functions for service: Math
 //**********************************************************
 uint32_t Math_Add(uint32_t, uint32_t, error_t*);

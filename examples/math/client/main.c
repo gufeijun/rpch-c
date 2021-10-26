@@ -30,7 +30,7 @@ int main() {
         struct Quotient* res = Math_Divide(9, 4, cli);
         assert(!client_failed(cli) && res->Quo == 2);
         assert(res->Rem == 1);
-        Quotient_destroy(res);
+        Quotient_delete(res);
     }
     printf("test succ\n");
     client_destroy(cli);

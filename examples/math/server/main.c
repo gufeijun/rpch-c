@@ -10,7 +10,7 @@ int32_t Math_Multiply(struct TwoNum* num, error_t* err) {
 }
 
 struct Quotient* Math_Divide(uint64_t a, uint64_t b, error_t* err) {
-    struct Quotient* resp = malloc(sizeof(struct Quotient));
+    struct Quotient* resp = Quotient_create();
     resp->Rem = a % b;
     resp->Quo = a / b;
     return resp;

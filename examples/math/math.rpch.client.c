@@ -13,11 +13,23 @@
 #include "error.h"
 #include "client.h"
 
+static inline __attribute__((always_inline)) void Quotient_init(struct Quotient*);
+static inline __attribute__((always_inline)) void Quotient_destroy(struct Quotient*);
+static inline __attribute__((always_inline)) void TwoNum_init(struct TwoNum*);
+static inline __attribute__((always_inline)) void TwoNum_destroy(struct TwoNum*);
 
 void Quotient_init(struct Quotient* data) {}
 void Quotient_destroy(struct Quotient* data) {}
+void Quotient_delete(struct Quotient* arg) {
+	Quotient_destroy(arg);
+	free(arg);
+}
 void TwoNum_init(struct TwoNum* data) {}
 void TwoNum_destroy(struct TwoNum* data) {}
+void TwoNum_delete(struct TwoNum* arg) {
+	TwoNum_destroy(arg);
+	free(arg);
+}
 
 #define invalid_argcnt(err, want, got) \
     errorf(err, "expected count of arugments is %d, but got %d", want, got)
@@ -126,8 +138,7 @@ uint32_t Math_Add(uint32_t arg1, uint32_t arg2, client_t* client) {
 	int free_data = 1;
     struct client_request req;
     struct argument resp;
-	error_t* err = &client->err;
-	uint32_t v = 0;
+	error_t* err = &client->err;uint32_t v = 0;
 
 	client_request_init(&req, "Math", "Add", 2);
 	argument_init_with_option(req.args + 0, 0, "uint32", &arg1, 4);
@@ -147,8 +158,7 @@ int32_t Math_Sub(int32_t arg1, int32_t arg2, client_t* client) {
 	int free_data = 1;
     struct client_request req;
     struct argument resp;
-	error_t* err = &client->err;
-	int32_t v = 0;
+	error_t* err = &client->err;int32_t v = 0;
 
 	client_request_init(&req, "Math", "Sub", 2);
 	argument_init_with_option(req.args + 0, 0, "int32", &arg1, 4);
@@ -170,8 +180,7 @@ int32_t Math_Multiply(struct TwoNum* arg1, client_t* client) {
     struct argument resp;
 	error_t* err = &client->err;
 	char* data = NULL;
-    cJSON* node1 = NULL;
-	int32_t v = 0;
+    cJSON* node1 = NULL;int32_t v = 0;
 
 	client_request_init(&req, "Math", "Multiply", 1);
 	node1 = TwoNum_marshal(arg1, &client->err);
@@ -195,8 +204,7 @@ struct Quotient* Math_Divide(uint64_t arg1, uint64_t arg2, client_t* client) {
 	int free_data = 1;
     struct client_request req;
     struct argument resp;
-	error_t* err = &client->err;
-	struct Quotient* v = NULL;
+	error_t* err = &client->err;struct Quotient* v = NULL;
 
 	client_request_init(&req, "Math", "Divide", 2);
 	argument_init_with_option(req.args + 0, 0, "uint64", &arg1, 8);
@@ -205,6 +213,7 @@ struct Quotient* Math_Divide(uint64_t arg1, uint64_t arg2, client_t* client) {
     if (!client->err.null) goto end;
 	CHECK_ARG_TYPE("Quotient", resp.type_name)
 	v = malloc(sizeof(struct Quotient));
+	Quotient_init(v);
 	Quotient_unmarshal(v, resp.data, &client->err);
 	
 end:

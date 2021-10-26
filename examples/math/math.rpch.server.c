@@ -21,8 +21,18 @@ static inline __attribute__((always_inline)) void TwoNum_destroy(struct TwoNum*)
 
 void Quotient_init(struct Quotient* data) {}
 void Quotient_destroy(struct Quotient* data) {}
+struct Quotient* Quotient_create() {
+	struct Quotient* v = malloc(sizeof(struct Quotient));
+	Quotient_init(v);
+	return v;
+}
 void TwoNum_init(struct TwoNum* data) {}
 void TwoNum_destroy(struct TwoNum* data) {}
+struct TwoNum* TwoNum_create() {
+	struct TwoNum* v = malloc(sizeof(struct TwoNum));
+	TwoNum_init(v);
+	return v;
+}
 
 #define invalid_argcnt(err, want, got) \
     errorf(err, "expected count of arugments is %d, but got %d", want, got)
@@ -139,7 +149,6 @@ void Math_Add_handler(request_t* req, error_t* err, struct argument* resp) {
 	CHECK_ARG_SIZE("uint32", 4, req->args[1].data_len)
 	arg1 = *(uint32_t*)req->args[0].data;
 	arg2 = *(uint32_t*)req->args[1].data;
-	
 	res = Math_Add(arg1, arg2, err);
 	if (!err->null) goto end;
 	build_resp(resp, 0, "uint32", 4, (char*)&res);
@@ -159,7 +168,6 @@ void Math_Sub_handler(request_t* req, error_t* err, struct argument* resp) {
 	CHECK_ARG_SIZE("int32", 4, req->args[1].data_len)
 	arg1 = *(int32_t*)req->args[0].data;
 	arg2 = *(int32_t*)req->args[1].data;
-	
 	res = Math_Sub(arg1, arg2, err);
 	if (!err->null) goto end;
 	build_resp(resp, 0, "int32", 4, (char*)&res);
@@ -177,7 +185,6 @@ void Math_Multiply_handler(request_t* req, error_t* err, struct argument* resp) 
 	TwoNum_init(&arg1);
 	TwoNum_unmarshal(&arg1, req->args[0].data, err);
 	if (!err->null) goto end;
-	
 	res = Math_Multiply(&arg1, err);
 	if (!err->null) goto end;
 	build_resp(resp, 0, "int32", 4, (char*)&res);
@@ -199,7 +206,6 @@ void Math_Divide_handler(request_t* req, error_t* err, struct argument* resp) {
 	CHECK_ARG_SIZE("uint64", 8, req->args[1].data_len)
 	arg1 = *(uint64_t*)req->args[0].data;
 	arg2 = *(uint64_t*)req->args[1].data;
-	
 	res = Math_Divide(arg1, arg2, err);
 	if (!err->null) goto end;
 	root = Quotient_marshal(res, err);

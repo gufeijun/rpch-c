@@ -21,7 +21,8 @@ struct TwoNum{
 	int32_t B;
 };
 
-void Quotient_destroy(struct Quotient*);
+void Quotient_delete(struct Quotient*);
+
 uint32_t Math_Add(uint32_t, uint32_t, client_t*);
 int32_t Math_Sub(int32_t, int32_t, client_t*);
 int32_t Math_Multiply(struct TwoNum*, client_t*);
