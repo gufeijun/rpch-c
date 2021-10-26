@@ -11,9 +11,11 @@
 #include <unistd.h>
 
 #include "addr.h"
+#include "argument.h"
 #include "buffer.h"
 #include "conn.h"
 #include "error.h"
+#include "type.h"
 
 #define BUFSIZE 4096
 #define MAGIC 0x00686A6C
@@ -116,6 +118,27 @@ bad:
     error_put(err, strerror(errno));
 }
 
+static void discard_data(client_t* cli, int n) {
+    int nn;
+    char buf[64];
+    while (n > 0) {
+        nn = conn_read(cli->buff->conn, buf, n);
+        if (nn <= 0) error_put(&cli->err, strerror(errno));
+        n -= nn;
+    }
+}
+
+static void read_err(client_t* cli, struct argument* resp) {
+    int to_read;
+    to_read = resp->data_len < 128 ? resp->data_len : 127;
+    read_full(cli->buff->conn, cli->err.msg, to_read, &cli->err);
+    if (client_failed(cli)) return;
+    cli->err.msg[resp->data_len] = '\0';
+    cli->err.null = false;
+    if (resp->data_len >= 128) discard_data(cli, resp->data_len - 127);
+    resp->data_len = 0;
+}
+
 static uint64_t read_response(client_t* cli, struct argument* resp) {
     uint64_t seq;
 
@@ -126,6 +149,14 @@ static uint64_t read_response(client_t* cli, struct argument* resp) {
     memcpy(&resp->type_kind, cli->resp_hbuf + 8, 2);
     memcpy(&resp->type_name_len, cli->resp_hbuf + 10, 2);
     memcpy(&resp->data_len, cli->resp_hbuf + 12, 4);
+    if (resp->type_kind == TYPE_NORTN) {
+        return seq;
+    }
+    if (resp->type_kind == TYPE_ERROR) {
+        read_err(cli, resp);
+        return seq;
+    }
+
     resp->type_name = malloc(resp->type_name_len + 1);
     read_full(cli->buff->conn, resp->type_name, resp->type_name_len, &cli->err);
     if (!cli->err.null) goto bad;
