@@ -9,7 +9,7 @@ if [ $# = 0  ]; then
 
     rm -rf obj/*
     
-    hgen -dir . string.gfj
+    hgen -dir . -lang c string.gfj
     
     GCCFLAGS="-Wall -O2 -Wno-pointer-to-int-cast -Wno-unused-function"
     INCLUDES="-I../../ -I./"

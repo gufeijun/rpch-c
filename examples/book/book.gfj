@@ -1,0 +1,31 @@
+service bookMarket{
+    //@0:书名
+    //功能: 获取对应书名的结构体
+    Book getBook(string)
+    //@0:书 @1:购买此书的账户
+    //功能: 从账户中消费此书
+    Account consume(Book,Account)
+    //@0:书名 @1:待更新的书价
+    void updateBookPrice(string,Price)
+    //@0:书 
+    //功能: 上货书籍
+    void shelve(Book)
+}
+
+//账户结构
+message Account{
+    string userName //用户名
+    float32 balance   //存额
+}
+
+//书结构
+message Book{
+    Price price     //价格
+    string name     //书名
+}
+
+//价格结构
+message Price{
+    string unit     //单位:yuan, dime, cent
+    float32 num       //价格
+}

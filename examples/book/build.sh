@@ -9,7 +9,7 @@ if [ $# = 0  ]; then
 
     rm -rf obj/*
     
-    hgen -dir . -lang go math.gfj
+    hgen -dir . -lang c book.gfj
     
     GCCFLAGS="-Wall -O2 -Wno-pointer-to-int-cast -Wno-unused-function"
     INCLUDES="-I../../ -I./"
@@ -19,8 +19,8 @@ if [ $# = 0  ]; then
     ar -cvq librpch.a *.o
     cd ..
     
-    gcc -o bin/server ./math.rpch.server.c ./server/*.c obj/librpch.a $GCCFLAGS $INCLUDES -lpthread
-    gcc -o bin/client ./math.rpch.client.c ./client/*.c obj/librpch.a $GCCFLAGS $INCLUDES
+    gcc -o bin/server ./book.rpch.server.c ./server/*.c obj/librpch.a $GCCFLAGS $INCLUDES -lpthread
+    gcc -o bin/client ./book.rpch.client.c ./client/*.c obj/librpch.a $GCCFLAGS $INCLUDES
 
     echo "build success!"
     echo "all binaries are in directory bin!"
