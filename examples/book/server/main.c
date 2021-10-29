@@ -20,19 +20,13 @@ struct Account* bookMarket_consume(struct Book* book, struct Account* account,
     }
     account->balance -= price;
     // account会在该函数结束后被销毁，不能直接返回account
-    //应该在堆区分配内存，对account进行深拷贝
-    struct Account* acc = Account_create();
-    acc->balance = account->balance;
-    acc->userName = strdup(account->userName);
-    return acc;
+    // 应该在堆区分配内存，对account进行深拷贝
+    return Account_clone(account);
 }
 
 void bookMarket_shelve(struct Book* book, error_t* err) {
-    struct Book* b = Book_create();
-    b->name = strdup(book->name);
-    b->price->num = book->price->num;
-    b->price->unit = strdup(book->price->unit);
-    hashmap_set(book_map, book->name, b);
+    // book会在当前请求完成后销毁，所以我们需要对其深拷贝后保存
+    hashmap_set(book_map, book->name, Book_clone(book));
 }
 
 void bookMarket_updateBookPrice(char* bookName, struct Price* price,
@@ -41,11 +35,9 @@ void bookMarket_updateBookPrice(char* bookName, struct Price* price,
     if (book == NULL) {
         return;
     }
-    //对price深拷贝
-    book->price->num = price->num;
     free(book->price->unit);
-    book->price->unit = strdup(price->unit);
-    book->name = bookName;
+    free(book->price);
+    book->price = Price_clone(price);
 }
 
 struct Book* bookMarket_getBook(char* bookName, error_t* err) {
@@ -55,11 +47,7 @@ struct Book* bookMarket_getBook(char* bookName, error_t* err) {
         return NULL;
     }
     //深拷贝book
-    struct Book* ret = Book_create();
-    ret->name = strdup(book->name);
-    ret->price->num = book->price->num;
-    ret->price->unit = strdup(book->price->unit);
-    return ret;
+    return Book_clone(book);
 }
 
 void book_destroy(void* arg) {
