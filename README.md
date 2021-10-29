@@ -105,8 +105,10 @@ int main() {
   ```c
   void bookMarket_shelve(struct Book* book, error_t* err) {
       //将book存到hashmap中
-      hashmap_set(book_map, book->name, book);				//wrong
-      hashmap_set(book_map, book->name, Book_clone(book));	//right
+      //wrong
+      hashmap_set(book_map, book->name, book);	
+      //right
+      hashmap_set(book_map, book->name, Book_clone(book));	
   }
   ```
 
@@ -114,14 +116,16 @@ int main() {
 
   ```c
   void to_upper(char* str){
-      store_and_use_later(str);			//wrong
-      store_and_use_lator(strdup(str))	//right
+      //wrong
+      store_and_use_later(str);
+      //right
+      store_and_use_lator(strdup(str));
   }
   ```
 
   使用strdup对字符串进行深拷贝。
 
-+ 如果生成的服务handler中，返回值为指针类型时(对应IDL中返回值为一个message或者string)，我们应该返回值的所有数据放在堆空间，框架会统一进行free，无需担心内存泄露：
++ 如果生成的服务handler中，返回值为指针类型时(对应IDL中返回值为一个message或者string)，我们应该将返回值的所有数据放在堆空间(包括结构体指针成员)，框架会统一进行free，无需担心内存泄露：
 
   ```c
   struct Book* bookMarket_createBook(error_t* err) {
@@ -158,12 +162,14 @@ int main() {
       for (unsigned long i = 0; i < len; i++) {
           str[i] = tolower(str[i]);
       }
-      return str;					//wrong
-      return strdup(str);			//right
+      //wrong
+      return str;			
+      //right
+      return strdup(str);			
   }
   ```
 
-+ 如果出现错误，则可以对`error_t* err`进行操作，一旦为err指定了错误，则服务端不会将函数返回值传递给客户端，相反将错误信息传递给客户端。对于error_t的操作定义在框架的`error.h`头文件中，请自行查阅。
++ 如果服务端的业务代码中出现了错误或者异常，则可以对`error_t* err`进行操作，一旦为err指定了错误，则服务端不会将函数返回值传递给客户端，转而将错误信息传递给客户端。对于error_t的操作定义在框架的`error.h`头文件中，请自行查阅。
 
 ### 客户端
 
